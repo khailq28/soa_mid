@@ -1,0 +1,135 @@
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}
+IBanking
+{% endblock %}
+
+{% block styles %}
+{{super()}}
+<link rel="stylesheet" href="{{url_for('.static', filename='home.css')}}">
+<link rel="stylesheet" href="{{url_for('.static', filename='font-awesome-4.7.0/css/font-awesome.min.css')}}">
+{% endblock %}
+
+{% block content %}
+<div id="loading" style="display: none;">
+    <i class="fa fa-spinner fa-3x fa-spin"></i>
+</div>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">iBanking</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText"
+        aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarText">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+            </li>
+        </ul>
+        <span class="navbar-text">
+            <strong id="name"></strong>
+
+            <a href="/logout" class="btn btn-outline-info my-2 my-sm-0" style="margin-left: 10px;">Logout</a>
+        </span>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <b>BASIC INFORMATION</b>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-sm-3">
+                    <label><b>Student ID</b></label>
+                    <input type="text" class="form-control" id="ustudentId" disabled>
+                    <label><b>Phone number</b></label>
+                    <input type="text" class="form-control" id="uphonenumber" disabled>
+                </div>
+                <div class="col-sm-5">
+                    <label><b>Name</b></label>
+                    <input type="text" class="form-control" id="uname" disabled>
+                    <label><b>Email</b></label>
+                    <input type="text" class="form-control" id="uemail" disabled>
+                </div>
+                <div class="col-sm-4">
+                    <label>&nbsp;</label>
+                    <div class="small-box bg-green">
+                        <div class="inner">
+                            <h3 id="umoney"></h3>
+                            <p>Available balance</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fa fa-usd" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <b>TUITION - CHARGES</b>
+        </div>
+        <div class="card-body">
+            <form id="fStudentId">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <label><b>Student ID</b></label>
+                        <input class="form-control" type="text" name="studentId" id="studentId">
+                    </div>
+                    <div class="col-sm-2">
+                        <label>&nbsp;</label><br>
+                        <button type="submit" class="btn btn-success">Search</button>
+                    </div>
+                    <div class="col-sm-1">
+                        <label>&nbsp;</label><br>
+                    </div>
+                    <div class="col-sm-5" id='semesters'>
+
+                    </div>
+                </div>
+            </form>
+
+            <hr>
+            <div id="info-receiver"></div>
+            <div id="tuition"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <b>PAYENT HISTORY</b>
+        </div>
+        <div class="card-body"">
+            <div id="a"></div>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Modal Add Employee-->
+<div id="paymodal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">PAYMENT CONFIRMATION</h4>
+            </div>
+            <div class="modal-body" id="body-confirm">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Optional JavaScript -->
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="{{url_for('.static', filename='home.js')}}"></script>
+{% endblock %}

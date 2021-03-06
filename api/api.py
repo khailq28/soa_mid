@@ -96,6 +96,9 @@ def getSemester():
 @api.route('/get_tuition', methods=['POST'])
 def getTuition():
     if request.method == 'POST' and 'studentId' in request.form and 'semester' in request.form:
+        session.pop('semester', None)
+        session['semester'] = request.form['semester']
+
         sStudentId = request.form['studentId']
         sSemester = request.form['semester']
 
@@ -137,12 +140,9 @@ def getOtp():
 
     return 'OTP is sent to your email!'
 
-#save semester, which choosen by user
-@api.route('/save_semester', methods=['POST'])
-def saveSemester():
-    if 'semester' in session:
-        session.pop('semester', None)
-    session['semester'] = request.form['semester']
+@api.route('/test')
+def test():
+    return session['semester']
 
 @api.route('/payment', methods=['POST'])
 def payment():

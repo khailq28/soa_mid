@@ -97,24 +97,6 @@ $('#fStudentId').submit(function (e) {
                 //change semester in dropbox and show tuition
                 $('#semester').change(function () {
                     if ($(this).val() != 'Choose semester') {
-                        //save choice
-                        $.ajax({
-                            url: '/api/save_semester',
-                            method: 'post',
-                            data: {
-                                'semester': $(this).val()
-                            },
-                            error: function () {
-                                console.log('error');
-                            },
-                            beforeSend: function () {
-                                $('#loading').css('display', 'block');
-                            },
-                            complete: function () {
-                                $('#loading').css('display', 'none');
-                            }
-                        });
-
                         $.ajax({
                             url: '/api/get_tuition',
                             method: 'post',

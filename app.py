@@ -4,6 +4,14 @@ from wtforms import StringField, PasswordField, BooleanField
 from wtforms.validators import InputRequired, Email, Length
 from flask_sqlalchemy  import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+
+from flask_jwt_extended import (
+    JWTManager, create_access_token, create_refresh_token,
+    set_access_cookies, set_refresh_cookies,
+     jwt_required,
+    get_jwt_identity, unset_jwt_cookies
+)
+
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
 from init import app, db
@@ -40,21 +48,27 @@ def login():
         if user:
             if check_password_hash(user.password, form.password.data):
                 login_user(user)
-                return redirect(url_for('home'))
 
-    # #submit form
-    # if form.validate_on_submit():
-    #     user = User.query.filter_by(username=form.username.data).first()
-    #     if user:
-    #         if check_password_hash(user.password, form.password.data):
-    #             login_user(user)
-    #             return redirect(url_for('home'))
-
+                access_token = create_access_token(identity=username)
+                refresh_token = create_refresh_token(identity=username)
+                resp = jsonify({
+                    'login': True,
+                    'token': access_token
+                })
+                # set_access_cookies(resp, access_token)
+                # set_refresh_cookies(resp, refresh_token)
+                return resp, 200
         #error
-        flash('Invalid username or password')
-        return render_template('login.html', form=form)
+        return jsonify(message = 'Invalid username or password')
 
     return render_template('login.html', form=form)
+
+@app.route("/protected", methods=["GET"])
+@jwt_required()
+def protected():
+    # Access the identity of the current user with get_jwt_identity
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
 
 @app.route('/home')
 @login_required
@@ -62,10 +76,11 @@ def home():
     return render_template('home.html')
 
 @app.route('/logout')
-@login_required
 def logout():
     logout_user()
-    return redirect(url_for('login'))
+    resp = jsonify({'logout': True})
+    # unset_jwt_cookies(resp)
+    return resp, 200
 
 if __name__ == "__main__":
     app.run(debug=True)

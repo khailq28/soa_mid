@@ -2,6 +2,7 @@ from flask import Flask, json
 from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
 from flask_mail import Mail
+from flask_jwt_extended import JWTManager
 
 # for session
 from datetime import timedelta
@@ -21,7 +22,17 @@ app.config['MAIL_PASSWORD'] = 'Testemail123'
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 
-app.permanent_session_lifetime = timedelta(minutes=5)
+# app.config['JWT_TOKEN_LOCATION'] = ['cookies', 'headers']
+app.config['JWT_TOKEN_LOCATION'] = ['headers']
+# app.config['JWT_COOKIE_SECURE'] = False
+# app.config['JWT_ACCESS_COOKIE_PATH'] = '/api/'
+# app.config['JWT_REFRESH_COOKIE_PATH'] = '/refresh'
+# app.config['JWT_COOKIE_CSRF_PROTECT'] = True
+app.config['JWT_SECRET_KEY'] = 'aaaaaasdfdsf'
+
+jwt = JWTManager(app)
+
+app.permanent_session_lifetime = timedelta(minutes=1)
 
 mail = Mail(app)
 bootstrap = Bootstrap(app)

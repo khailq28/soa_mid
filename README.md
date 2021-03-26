@@ -9,19 +9,4 @@
     khailuong           12345678
     bahuy123            12345678
     hoangkhang          12345678
-- URIs:
-    Endpoint          Methods    Rule
-    ----------------  ---------  ---------------------------------
-    api.getOtp        POST       /api/get_otp
-    api.getSemester   POST       /api/get_semester
-    api.getTuition    POST       /api/get_tuition
-    api.getUserData   GET        /api/get_user_data
-    api.payment       POST       /api/payment
-    api.saveSemester  POST       /api/save_semester
-    api.static        GET        /api/static/<path:filename>
-    bootstrap.static  GET        /bootstrap/static/<path:filename>
-    home              GET        /home
-    login             GET, POST  /login
-    login             GET        /
-    logout            GET        /logout
-    static            GET        /static/<path:filename>
+- URIs: https://documenter.getpostman.com/view/15010789/TzCHAA7H

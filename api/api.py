@@ -1,9 +1,9 @@
 from flask import Blueprint, jsonify, request, json, session, abort
 
 from models import *
-from flask_login import current_user, login_required
 from flask_mail import Message
 from init import mail, db
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 import random
 from datetime import datetime
@@ -23,18 +23,24 @@ def get_semester(sStudentId):
 def get_tuition(sStuId, sSemester):
     return Tuition.query.join(User, Tuition.user_id == User.id).\
                         with_entities(Tuition.id, Tuition.semester_tuition, Tuition.reduction, Tuition.note).\
-                        filter(Tuition.semester == sSemester, User.student_id == sStuId).first()
+                            filter(Tuition.semester == sSemester, User.student_id == sStuId).first()
 
 #get info by studentId
 def get_user_info(sStuId):
     return User.query.with_entities(User.name, User.phone_number, User.email).filter(User.student_id == sStuId).first()
 
-@api.route('/get_user_data')
-@login_required
+@api.route('/get_user_data', methods=['POST'])
+@jwt_required()
 def getUserData():
+    sUsername = get_jwt_identity()
+
+    new_user = User.query.\
+        with_entities(User.student_id, User.name, User.phone_number, User.email, User.money).\
+            filter(User.username == sUsername).first()
+
     new_history = History.query.join(Tuition, History.tuition_id == Tuition.id).\
-                        with_entities(History.date_of_payment, Tuition.semester_tuition, Tuition.reduction, Tuition.semester, History.submitter_id).\
-                            filter(History.receiver_id == current_user.student_id).all()
+                    with_entities(History.date_of_payment, Tuition.semester_tuition, Tuition.reduction, Tuition.semester, History.submitter_id).\
+                        filter(History.receiver_id == new_user.student_id).all()
     history_output = []
     for obj in new_history:
         name = User.query.with_entities(User.name).filter(User.student_id == obj.submitter_id).first()
@@ -48,85 +54,86 @@ def getUserData():
         })
     
     return jsonify(
-       studentId = current_user.student_id,
-       name = current_user.name,
-       phone_number = current_user.phone_number,
-       email = current_user.email,
-       money = current_user.money,
+       studentId = new_user.student_id,
+       name = new_user.name,
+       phone_number = new_user.phone_number,
+       email = new_user.email,
+       money = new_user.money,
        history = history_output
-   )
+    ), 200
 
 @api.route('/get_semester', methods=['POST'])
+@jwt_required()
 def getSemester():
-    if request.method == 'POST' and 'studentId' in request.form:
-        sStudentId = request.form['studentId']
+    sStudentId = request.form['studentId']
 
-        #save the searched student 
-        if 'search_student_id' in session:
-            session.pop('search_student_id', None)
-        session['search_student_id'] = sStudentId
+    #save the searched student 
+    if 'search_student_id' in session:
+        session.pop('search_student_id', None)
+    session['search_student_id'] = sStudentId
 
-        aSemesters = []
-        for sSemester in get_semester(sStudentId):
-            aSemesters.append(sSemester.semester)
-        
-        aInfo = []
-        info = get_user_info(sStudentId)
-        if info:
-            aInfo.append({
-                'name' : info.name,
-                'phone_number' : info.phone_number,
-                'email' : info.email,
-            })
+    aSemesters = []
+    for sSemester in get_semester(sStudentId):
+        aSemesters.append(sSemester.semester)
+    
+    aInfo = []
+    info = get_user_info(sStudentId)
+    if info:
+        aInfo.append({
+            'name' : info.name,
+            'phone_number' : info.phone_number,
+            'email' : info.email,
+        })
 
-        if 'search_student_email' in session:
-            session.pop('search_student_email', None)
-        session['search_student_email'] = info.email
+    if 'search_student_email' in session:
+        session.pop('search_student_email', None)
+    session['search_student_email'] = info.email
 
-        if not aSemesters:
-            return jsonify(
-                error = 'Student ID is invalid'
-            )
-            
+    if not aSemesters:
         return jsonify(
-            semesters = aSemesters,
-            info = aInfo
-        )
+            error = 'Student ID is invalid'
+        ), 200
+        
+    return jsonify(
+        semesters = aSemesters,
+        info = aInfo
+    ), 200
 
 @api.route('/get_tuition', methods=['POST'])
+@jwt_required()
 def getTuition():
-    if request.method == 'POST' and 'studentId' in request.form and 'semester' in request.form:
-        session.pop('semester', None)
-        session['semester'] = request.form['semester']
+    session.pop('semester', None)
+    session['semester'] = request.form['semester']
 
-        sStudentId = request.form['studentId']
-        sSemester = request.form['semester']
+    sStudentId = request.form['studentId']
+    sSemester = request.form['semester']
 
-        tuition = get_tuition(sStudentId, sSemester)
-        #save the tuition id
-        if 'tuition_id' in session:
-            session.pop('tuition_id', None)
-        session['tuition_id'] = tuition.id
+    tuition = get_tuition(sStudentId, sSemester)
+    #save the tuition id
+    if 'tuition_id' in session:
+        session.pop('tuition_id', None)
+    session['tuition_id'] = tuition.id
 
-        data = []
-        data.append(
-            {
-                'semester_tuition' : tuition.semester_tuition,
-                'reduction' : tuition.reduction,
-                'note' : tuition.note
-            }
-        )
+    data = []
+    data.append(
+        {
+            'semester_tuition' : tuition.semester_tuition,
+            'reduction' : tuition.reduction,
+            'note' : tuition.note
+        }
+    )
 
-        if not data:
-            return jsonify(
-                error = 'Error'
-            )
-
+    if not data:
         return jsonify(
-            tuition = data
+            error = 'Error'
         )
+
+    return jsonify(
+        tuition = data
+    ), 200
 
 @api.route('/get_otp', methods=['POST'])
+@jwt_required()
 def getOtp():
     if 'otp' in session:
         session.pop('otp', None)
@@ -134,42 +141,43 @@ def getOtp():
     #save in session
     session['otp'] = otp
 
-    msg = Message('Confirm payment', sender = 'a06204995@gmail.com', recipients = [current_user.email])
+    new_user = User.query.with_entities(User.email).filter(User.username == get_jwt_identity()).first()
+
+    msg = Message('Confirm payment', sender = 'a06204995@gmail.com', recipients = [new_user.email])
     msg.body = 'OTP: ' + str(otp)
     mail.send(msg)
 
-    return 'OTP is sent to your email!'
-
-@api.route('/test')
-def test():
-    return session['semester']
+    return 'OTP is sent to your email!', 200
 
 @api.route('/payment', methods=['POST'])
+@jwt_required()
 def payment():
     pStudId = request.form['pStudId']
     rStudId = request.form['rStudId']
     semester = request.form['semester']
     otp = request.form['otp']
 
+    new_user = User.query.filter(User.username == get_jwt_identity()).first()
+
     new_tuition = get_tuition(rStudId, semester)
     total_tuition = int(new_tuition.semester_tuition) - int(new_tuition.reduction)
 
-    if total_tuition >= int(current_user.money):
+    if total_tuition >= int(new_user.money):
         return jsonify(
             message = 'Your account does not have enough money!'
-        )
+        ), 200
 
     if otp == '' or not 'otp' in session:
         return jsonify(
             message = 'Invalid OTP'
-        )
+        ), 200
 
     if str(otp) == str(session['otp']):
         session.pop('otp', None)
-        if pStudId != current_user.student_id or rStudId != session['search_student_id'] or semester != session['semester']:
+        if pStudId != new_user.student_id or rStudId != session['search_student_id'] or semester != session['semester']:
             return jsonify(
                 message = 'error'
-            )
+            ), 200
 
         # datetime object containing current date and time
         now = datetime.now()
@@ -183,33 +191,32 @@ def payment():
             filter(Tuition.id == session['tuition_id'], Tuition.semester == semester).\
                 update(dict(note='COMPLETED'))
 
-        new_user_money = int(current_user.money) - (total_tuition)
+        new_user_money = int(new_user.money) - (total_tuition)
         user_update = User.query.\
-                        filter(User.id == current_user.id).\
+                        filter(User.id == new_user.id).\
                             update(dict(money = str(new_user_money)))
 
         db.session.commit()
 
-        msg = Message('Payment success', sender = 'a06204995@gmail.com', recipients = [current_user.email])
+        msg = Message('Payment success', sender = 'a06204995@gmail.com', recipients = [new_user.email])
         msg.body = 'Student ID: ' + rStudId + \
                     '\nSemester: ' + semester +  \
                     '\nTotal tuition paid: ' + str(total_tuition) + \
-                    '\nStudent Id of payer: ' + current_user.student_id
+                    '\nStudent Id of payer: ' + new_user.student_id
         mail.send(msg)
 
-        if current_user.email != session['search_student_email']:
+        if new_user.email != session['search_student_email']:
             msg = Message('Payment success', sender = 'a06204995@gmail.com', recipients = [session['search_student_email']])
             msg.body = 'Student ID: ' + rStudId + \
                         '\nSemester: ' + semester +  \
                         '\nTotal tuition paid: ' + str(total_tuition) + \
-                        '\nStudent Id of payer: ' + current_user.student_id
+                        '\nStudent Id of payer: ' + new_user.student_id
             mail.send(msg)
 
         return jsonify(
             message = 'Payment success'
-        )   
+        ), 200
     else:
         return jsonify(
             message = 'Invalid OTP'
-        )
-
+        ), 200

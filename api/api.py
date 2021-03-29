@@ -135,11 +135,16 @@ def getTuition():
 @api.route('/get_otp', methods=['POST'])
 @jwt_required()
 def getOtp():
-    if 'otp' in session:
-        session.pop('otp', None)
     otp = random.randrange(100000, 1000000)
-    #save in session
-    session['otp'] = otp
+
+    # datetime object containing current date and time
+    now = datetime.now()
+    # dd/mm/YY H:M:S
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+
+    update_user = User.query.filter(User.username == get_jwt_identity()).\
+        update(dict(otp=otp, created_otp=dt_string))
+    db.session.commit()
 
     new_user = User.query.with_entities(User.email).filter(User.username == get_jwt_identity()).first()
 
@@ -167,13 +172,22 @@ def payment():
             message = 'Your account does not have enough money!'
         ), 200
 
-    if otp == '' or not 'otp' in session:
-        return jsonify(
-            message = 'Invalid OTP'
-        ), 200
+    if new_user.otp == request.form['otp']:
+        created_otp = datetime.strptime(new_user.created_otp, "%d/%m/%Y %H:%M:%S")
+        # datetime object containing current date and time
+        now = datetime.now()
+        # dd/mm/YY H:M:S
+        dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
 
-    if str(otp) == str(session['otp']):
-        session.pop('otp', None)
+        time_now = datetime.strptime(dt_string, "%d/%m/%Y %H:%M:%S")
+
+        a = time_now - created_otp
+        
+        if a.total_seconds() >= 300:
+            return jsonify(
+                message = 'OTP expired'
+            ), 200
+
         if pStudId != new_user.student_id or rStudId != session['search_student_id'] or semester != session['semester']:
             return jsonify(
                 message = 'error'
@@ -220,3 +234,23 @@ def payment():
         return jsonify(
             message = 'Invalid OTP'
         ), 200
+
+@api.route('/test', methods=['POST'])
+@jwt_required()
+def test():
+    new_user = User.query.with_entities(User.otp, User.created_otp).\
+        filter(User.username == get_jwt_identity()).first()
+    
+    if new_user.otp == request.form['otp']:
+        created_otp = datetime.strptime(new_user.created_otp, "%d/%m/%Y %H:%M:%S")
+        # datetime object containing current date and time
+        now = datetime.now()
+        # dd/mm/YY H:M:S
+        dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+
+        time_now = datetime.strptime(dt_string, "%d/%m/%Y %H:%M:%S")
+
+        a = time_now - created_otp
+        return str(a.total_seconds())
+    
+    return 'ko'

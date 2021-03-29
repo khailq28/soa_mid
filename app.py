@@ -50,7 +50,7 @@ def login():
                 login_user(user)
 
                 access_token = create_access_token(identity=username)
-                refresh_token = create_refresh_token(identity=username)
+                # refresh_token = create_refresh_token(identity=username)
                 resp = jsonify({
                     'login': True,
                     'token': access_token
@@ -76,6 +76,7 @@ def home():
     return render_template('home.html')
 
 @app.route('/logout')
+@login_required
 def logout():
     logout_user()
     resp = jsonify({'logout': True})

@@ -11,6 +11,8 @@ class User(UserMixin, db.Model):
     student_id = db.Column(db.String(8))
     phone_number = db.Column(db.String(10))
     money = db.Column(db.String(255))
+    otp = db.Column(db.String(6), default=0)
+    created_otp = db.Column(db.String(255), default=0)
   
     def __init__(self, username, email, password, name, student_id, phone_number, money):
         self.username = username

@@ -32,8 +32,6 @@ app.config['JWT_SECRET_KEY'] = 'aaaaaasdfdsf'
 
 jwt = JWTManager(app)
 
-app.permanent_session_lifetime = timedelta(minutes=1)
-
 mail = Mail(app)
 bootstrap = Bootstrap(app)
 

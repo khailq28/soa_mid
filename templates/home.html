@@ -106,7 +106,7 @@ IBanking
             <b>PAYENT HISTORY</b>
         </div>
         <div class="card-body"">
-            <div id="history-list"></div>
+            <div id=" history-list"></div>
     </div>
 </div>
 </div>
@@ -139,7 +139,6 @@ IBanking
         if (parts.length === 2) return parts.pop().split(';').shift();
     }
     $('#logout').click(function () {
-        document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC;"
         $.ajax({
             url: '/logout',
             method: 'get',
@@ -151,6 +150,7 @@ IBanking
             },
             beforeSend: function () {
                 $('#loading').css('display', 'block');
+                document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC;"
             },
             complete: function () {
                 $('#loading').css('display', 'none');

@@ -149,7 +149,7 @@ def getOtp():
     new_user = User.query.with_entities(User.email).filter(User.username == get_jwt_identity()).first()
 
     msg = Message('Confirm payment', sender = 'a06204995@gmail.com', recipients = [new_user.email])
-    msg.body = 'OTP: ' + str(otp)
+    msg.body = 'OTP (expires after 5 minutes): ' + str(otp)
     mail.send(msg)
 
     return 'OTP is sent to your email!', 200

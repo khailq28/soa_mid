@@ -29,6 +29,9 @@ app.config['JWT_TOKEN_LOCATION'] = ['headers']
 # app.config['JWT_REFRESH_COOKIE_PATH'] = '/refresh'
 # app.config['JWT_COOKIE_CSRF_PROTECT'] = True
 app.config['JWT_SECRET_KEY'] = 'aaaaaasdfdsf'
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
+
+app.permanent_session_lifetime = timedelta(hours=1)
 
 jwt = JWTManager(app)
 

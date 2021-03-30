@@ -208,7 +208,7 @@ def payment():
         new_user_money = int(new_user.money) - (total_tuition)
         user_update = User.query.\
                         filter(User.id == new_user.id).\
-                            update(dict(money = str(new_user_money)))
+                            update(dict(money = str(new_user_money), otp = '', created_otp=''))
 
         db.session.commit()
 
